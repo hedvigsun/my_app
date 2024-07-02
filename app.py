@@ -12,21 +12,15 @@ server = app.server
 
 sum_file = 'sum_file.csv'
 df = pd.read_csv(sum_file)
+
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
 op = [{'label': i, 'value': i} for i in df.columns]
 fig = px.box(df, x='model', y='auc_prob', color='gen')
 
-# buffer = io.StringIO()
-# app.to_html(buffer)
-
-# html_bytes = buffer.getvalue().encode()
-# encoded = b64encode(html_bytes).decode()
-
 app.layout = html.Div([
-    # html.H4("AUC by configuration"),
     html.Div([
-        html.H4("AUC by configuration"),
+        html.H2("Metrics by configuration", style={'textAlign': 'center'}),
         html.P("Filter by:"),
         dcc.Checklist(
             id='filter-by', 
@@ -35,14 +29,11 @@ app.layout = html.Div([
             inline=True
         ),
         dcc.Dropdown(id='filter-options', options=[], multi=False),
-    # ]),
-    # html.Div([
         html.P("x-axis:"),
         dcc.Dropdown(
             id='x-axis', 
             options=op,
             value='model', 
-         #   inline=True
         ),
         html.P("y-axis:"),
         dcc.Dropdown(
@@ -56,11 +47,11 @@ app.layout = html.Div([
             options=op, 
             value='gen', 
         )
-    ], style={'padding': 10, 'flex': 1}),
+    ], style={'padding': 10,'width':'20%'}),
     html.Div([
-        dash_table.DataTable(id='table', data=df.to_dict('records'), page_size=5, style_table={'overflowX': 'auto'}),
-        dcc.Graph(id="graph", figure=fig)
-    ])
+        dcc.Graph(id="graph", figure=fig),
+        dash_table.DataTable(id='table', data=df.to_dict('records'), page_size=7, style_table={'overflowX': 'auto'}),
+    ], style={'width': '70%'}),
 ], style={'display': 'flex', 'flexDirection': 'row'})
 
 @app.callback(
@@ -100,3 +91,4 @@ def update_output(x, y, color, filter_by, filter_value):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
