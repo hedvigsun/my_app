@@ -5,14 +5,12 @@ import numpy as np
 import itertools
 import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, dash_table, callback, Patch
-from base64 import b64encode
-import io
 
 
 app = Dash(__name__)
 server = app.server
 
-sum_file = f'/home/hedvigs/PycharmProjects/homewrs/snake_book/econ/out/tables/sum_file.csv'
+sum_file = 'sum_file.csv'
 df = pd.read_csv(sum_file)
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
