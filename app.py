@@ -9,7 +9,7 @@ from dash import Dash, dcc, html, Input, Output, dash_table, callback, Patch
 
 app = Dash(__name__)
 
-sum_file = f'/home/hedvigs/PycharmProjects/homewrs/snake_book/econ/out/tables/sum_file.csv'
+sum_file = 'sum_file.csv'
 df = pd.read_csv(sum_file)
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
