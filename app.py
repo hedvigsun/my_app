@@ -8,15 +8,35 @@ from dash import Dash, dcc, html, Input, Output, dash_table, callback, Patch
 
 
 app = Dash(__name__)
-server = app.server
 
-sum_file = 'sum_file.csv'
+sum_file = f'/home/hedvigs/PycharmProjects/homewrs/snake_book/econ/out/tables/sum_file.csv'
 df = pd.read_csv(sum_file)
-
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
 op = [{'label': i, 'value': i} for i in df.columns]
+numerical_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+numerical_cols.remove('fold')
+cols_few_unique = [col for col in df.columns if df[col].nunique() < 10]
+
 fig = px.box(df, x='model', y='auc_prob', color='gen')
+yaxis_dict = dict(
+                autorange=True,
+                showgrid=True,
+                zeroline=True,
+                dtick=5,
+                gridcolor='rgb(255, 255, 255)',
+                gridwidth=0.1,
+                zerolinecolor='rgb(255, 255, 255)',
+                zerolinewidth=20,
+                )
+margin_dict = dict(
+                l=40,
+                r=10,
+                b=80,
+                t=100,
+                )
+paper_color = 'rgb(243, 243, 243)'
+plot_color = 'rgba(215, 234, 256, 0.5)'
 
 app.layout = html.Div([
     html.Div([
@@ -35,22 +55,22 @@ app.layout = html.Div([
             options=op,
             value='model', 
         ),
-        html.P("y-axis:"),
+        html.P("y-axis (metric):"),
         dcc.Dropdown(
             id='y-axis', 
-            options=op, 
+            options=numerical_cols, 
             value='auc_prob', 
         ),
         html.P("color:"),
         dcc.Dropdown(
             id='color', 
-            options=op, 
+            options=cols_few_unique, 
             value='gen', 
         )
     ], style={'padding': 10,'width':'20%'}),
     html.Div([
         dcc.Graph(id="graph", figure=fig),
-        dash_table.DataTable(id='table', data=df.to_dict('records'), page_size=7, style_table={'overflowX': 'auto'}),
+        dash_table.DataTable(id='table', data=df.to_dict('records'), page_size=7, style_table={'overflowX': 'auto', 'backgroundColor':'dodgerblue'}),
     ], style={'width': '70%'}),
 ], style={'display': 'flex', 'flexDirection': 'row'})
 
@@ -74,6 +94,7 @@ def update_filter_options(filter_by):
     Input("filter-by", "value"),
     Input("filter-options", "value")
 )
+
 def update_output(x, y, color, filter_by, filter_value):
     if filter_value:
         patched_fig = Patch()
@@ -81,13 +102,36 @@ def update_output(x, y, color, filter_by, filter_value):
         filter_by= filter_by[0]
         # Filter rows where the selected column equals the selected value
         filtered_df = df[df[filter_by] == filter_value]
-        patched_fig = px.box(data_frame=filtered_df, x=x, y=y, color=color)
-        return filtered_df.to_dict('records'), patched_fig
+        patched_fig = px.box(data_frame=filtered_df, x=x, y=y, color=color, color_discrete_sequence=px.colors.qualitative.Vivid)
+        fdf = filtered_df
+        pfig = patched_fig
     else:
-        fig = px.box(data_frame=df, x=x, y=y, color=color)
-
-    # Return the data for the table and the figure
-        return df.to_dict('records'), fig
+        fig = px.box(data_frame=df, x=x, y=y, color=color,color_discrete_sequence=px.colors.qualitative.Vivid)
+        fdf=df
+        pfig = fig
+    if 'lr' in y:
+        pfig.add_shape(
+            type='line', line=dict(dash='dash'),
+            x0=-1, x1=9, y0=1, y1=1)
+    elif 'auc' in y:
+        pfig.add_shape(
+            type='line', line=dict(dash='dash', color=px.colors.qualitative.Vivid[4], width=3),
+            name=f'Average {y} for all {color}', showlegend=True, opacity=0.5,
+            x0=-1, x1=9, y0=fdf[y].mean(),y1=fdf[y].mean() )
+        for i, cname in enumerate(fdf[color].unique()):
+            cname_df = fdf[fdf[color]==cname]
+            mean_cname = cname_df[y].mean()
+            pfig.add_shape(
+                type='line', line=dict(dash='dash', color=px.colors.qualitative.Vivid[i]), name=f'Average {y} for {cname}',
+                x0=-1, x1=9, y0=mean_cname,y1=mean_cname, showlegend=True, opacity=0.7 )
+        pfig.update_layout(
+            title=f'{y} by {x}',
+#            yaxis=yaxis_dict,
+            margin=margin_dict,
+            paper_bgcolor=paper_color,
+            plot_bgcolor=plot_color,
+            showlegend=True)
+    return fdf.to_dict('records'), pfig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
