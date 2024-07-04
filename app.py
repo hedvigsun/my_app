@@ -8,8 +8,11 @@ from dash import Dash, dcc, html, Input, Output, dash_table, callback, Patch
 
 
 app = Dash(__name__)
-
+server = app.server
 sum_file = 'sum_file.csv'
+
+
+
 df = pd.read_csv(sum_file)
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
