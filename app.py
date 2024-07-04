@@ -73,7 +73,28 @@ app.layout = html.Div([
     ], style={'padding': 10,'width':'20%'}),
     html.Div([
         dcc.Graph(id="graph", figure=fig),
-        dash_table.DataTable(id='table', data=df.to_dict('records'), page_size=7, style_table={'overflowX': 'auto', 'backgroundColor':'dodgerblue'}),
+        dcc.Tooltip(id="graph-tooltip"),
+        dash_table.DataTable(
+            id='table', 
+            data=df.to_dict('records'),
+            sort_action='native',
+            fixed_rows={'headers': True}, 
+            style_table={'height': '300px', 'overflowY': 'auto',},
+                         #    'width':'1200px',
+                         # #    'overflowX': 'auto', 
+                         # 'backgroundColor':'dodgerblue'},
+                         style_as_list_view=True,
+                         style_cell={'padding': '20px'},
+                         style_data_conditional=[
+                             {
+                                 'if': {'row_index': 'odd'},
+                                 'backgroundColor': 'rgb(220, 220, 220)',
+                                 }
+                             ],
+                         style_header={
+                             'backgroundColor': 'white',
+                             'fontWeight': 'bold'
+                             },),
     ], style={'width': '70%'}),
 ], style={'display': 'flex', 'flexDirection': 'row'})
 
@@ -127,13 +148,12 @@ def update_output(x, y, color, filter_by, filter_value):
             pfig.add_shape(
                 type='line', line=dict(dash='dash', color=px.colors.qualitative.Vivid[i]), name=f'Average {y} for {cname}',
                 x0=-1, x1=9, y0=mean_cname,y1=mean_cname, showlegend=True, opacity=0.7 )
-        pfig.update_layout(
-            title=f'{y} by {x}',
-#            yaxis=yaxis_dict,
-            margin=margin_dict,
-            paper_bgcolor=paper_color,
-            plot_bgcolor=plot_color,
-            showlegend=True)
+    pfig.update_layout(
+        title=f'{y} by {x}',
+        margin=margin_dict,
+        paper_bgcolor=paper_color,
+        plot_bgcolor=plot_color,
+        showlegend=True)
     return fdf.to_dict('records'), pfig
 
 if __name__ == '__main__':
