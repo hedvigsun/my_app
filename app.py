@@ -5,6 +5,15 @@ import numpy as np
 import itertools
 import plotly.express as px
 from dash import Dash, dcc, html, Input, Output, dash_table, callback, Patch
+import pymysql
+
+# Database connection
+connection = pymysql.connect(
+    host='s462.loopia.se',
+    user='hedvigs',
+    password='!tFyjRseukk9',
+    database='espbc_se'
+)
 
 
 app = Dash(__name__)
